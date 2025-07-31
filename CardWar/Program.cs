@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace CardWar
 {
@@ -21,7 +26,7 @@ namespace CardWar
 
     struct RarityData
     {
-        private CardRarity id;
+        private CardRarity id {  get; set; }
         public CardRarity Id
         {
             get { return id; }
@@ -60,8 +65,8 @@ namespace CardWar
                 }
             }
         }
-        public ConsoleColor Color;
-        public string Name;
+        public ConsoleColor Color { get; set; }
+        public string Name { get; set; }
 
         public RarityData(CardRarity Id)
         {
@@ -105,19 +110,18 @@ namespace CardWar
     {
         public static readonly ConsoleColor DefaultColor = ConsoleColor.White;
 
-        public static int Money = 2000;
-        static void DrawMenu()
+        static void DrawMenu(Deck currentDeck)
         {
             Console.ForegroundColor = DefaultColor;
             Console.WriteLine("\n[MAIN MENU]");
-            DrawMoneyCount();
-            Console.WriteLine("0) Exit\n1) Create card\n2) List deck\n");
+            DrawMoneyCount(currentDeck);
+            Console.WriteLine("0) Exit\n1) Create card\n2) List deck\n3) Save deck\n4) Load deck\n");
             Console.Write("Enter > ");
         }
-        static void DrawMoneyCount()
+        static void DrawMoneyCount(Deck currentDeck)
         {
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"\nMONEY: {Money}\n");
+            Console.WriteLine($"\nMONEY: {currentDeck.Money}\n");
             Console.ForegroundColor = DefaultColor;
         }
         public static void WriteLineColor(string str, ConsoleColor col)
@@ -136,7 +140,10 @@ namespace CardWar
         {
             Deck deck = new Deck(50);
 
-            DrawMenu();
+            Directory.CreateDirectory(Environment.CurrentDirectory + "\\SavedDecks");
+            string filePath = Environment.CurrentDirectory + "\\SavedDecks\\";
+
+            DrawMenu(deck);
             Console.Write("Enter > ");
             ConsoleKeyInfo key = Console.ReadKey();
             while (key.KeyChar != '0') 
@@ -153,7 +160,45 @@ namespace CardWar
                     Console.Clear();
                     deck.ListCards();
                 }
-                DrawMenu();
+                if (key.KeyChar == '3')
+                {
+                    Console.Clear();
+
+                    Console.WriteLine("What to name this deck?\n");
+                    Console.Write("Enter > ");
+                    string fileName = Console.ReadLine() + ".json";
+
+                    var deckJson = JsonConvert.SerializeObject(deck, Formatting.Indented);
+                    File.WriteAllText(filePath + fileName, deckJson);
+                    WriteLineColor($"Successfully saved deck to: {filePath}", ConsoleColor.Green);
+                }
+                if (key.KeyChar == '4')
+                {
+                    Console.Clear();
+                    Console.WriteLine("Choose a deck from the list:");
+                    string[] files = Directory.GetFiles(filePath);
+
+                    foreach (string file in files)
+                    {
+                        var str = file.Replace(filePath, "").Replace(".json", "");
+                        WriteLineColor($"\t[{str}]", ConsoleColor.DarkGray);
+                    }
+                    Console.WriteLine();
+                    Console.Write("Enter > ");
+                    string fileName = Console.ReadLine() + ".json";
+                    while (!File.Exists(filePath+fileName))
+                    {
+                        WriteLineColor("File does not exist!", ConsoleColor.DarkRed);
+                        Console.WriteLine();
+                        Console.Write("Enter > ");
+                        fileName = Console.ReadLine() + ".json";
+                    }
+
+                    string deckJson = File.ReadAllText(filePath+fileName);
+                    deck = JsonConvert.DeserializeObject<Deck>(deckJson);
+                    WriteLineColor("Loaded deck successfully...", ConsoleColor.Green);
+                }
+                DrawMenu(deck);
                 
                 key = Console.ReadKey();
             }
@@ -173,7 +218,7 @@ namespace CardWar
             Console.Clear();
         SettingRarity:
             // Rarity Menu
-            DrawMoneyCount();
+            DrawMoneyCount(deck);
             Console.WriteLine("Choose Rarity:\n1) Common [$100],\n2) Uncommon [$200]," +
                 "\n3) Rare [$300],\n4) Epic [$400],\n5) Ledgendary [$500]\n6) Mythic [$600]" +
                 "\nB) back to menu\n");
@@ -192,7 +237,7 @@ namespace CardWar
                 WriteLineColor(" [INVALID] Must be a number from 1-6...", ConsoleColor.DarkRed);
                 goto SettingRarity;
             }
-            if ((chrNum * 100) > Program.Money)
+            if ((chrNum * 100) > deck.Money)
             {
                 WriteLineColor("\nNot enough funds! Pick something else or return to menu (B)...", ConsoleColor.DarkRed);
                 goto SettingRarity;
@@ -353,7 +398,7 @@ namespace CardWar
             Console.Clear();
             newCard.SetStats(newStats);
             deck.AddCard(newCard);
-            Program.Money -= maxPoints;
+            deck.Money -= maxPoints;
             WriteLineColor("Card added to deck...", newCard.GetRarityColor());
             return true;
         }
@@ -361,12 +406,16 @@ namespace CardWar
 
     class Deck
     {
-        private List<Card> cards = new List<Card>();
+        [JsonRequired]
+        private List<Card> cards { get; set; }
+        [JsonRequired]
         private readonly int maxSize;
+        public int Money = 2000;
 
         public Deck(int maxSize)
         {
             this.maxSize = maxSize;
+            cards = new List<Card>();
         }
 
         public void ListCards()
@@ -407,13 +456,29 @@ namespace CardWar
             cards.Add(newCard);
         }
     }
+    class foo
+    {
+        public int x { get; set; }
+        public int y { get; set; }
+
+        public foo(int x, int y)
+        {
+            this.x = x;
+            this.y = y;
+        }
+    }
 
     class Card
     {
+        [JsonRequired]
         private int Id { get; set; }
+        [JsonRequired]
         private string Name { get; set; }
+        [JsonRequired]
         private string Description { get; set; }
+        [JsonRequired]
         private RarityData Rarity {  get; set; }
+        [JsonRequired]
         private CardStats Stats { get; set; }
 
         public Card(string name, string desc, RarityData rarity, CardStats stats)
