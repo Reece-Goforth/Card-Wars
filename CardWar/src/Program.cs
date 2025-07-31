@@ -1,111 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.IO.Ports;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace CardWar
 {
-    enum CardRarity
-    {
-        None,
-        Common,
-        Uncommon,
-        Rare,
-        Epic,
-        Legendary,
-        Mythic,
-    }
-
-    struct RarityData
-    {
-        private CardRarity id {  get; set; }
-        public CardRarity Id
-        {
-            get { return id; }
-            set
-            {
-                id = value;
-                switch (value)
-                {
-                    default:
-                    case CardRarity.None:
-                        break;
-                    case CardRarity.Common:
-                        Color = ConsoleColor.DarkGray;
-                        Name = "COMMON";
-                        break;
-                    case CardRarity.Uncommon:
-                        Color = ConsoleColor.DarkGreen;
-                        Name = "UNCOMMON";
-                        break;
-                    case CardRarity.Rare:
-                        Color = ConsoleColor.Blue;
-                        Name = "RARE";
-                        break;
-                    case CardRarity.Epic:
-                        Color = ConsoleColor.DarkMagenta;
-                        Name = "EPIC";
-                        break;
-                    case CardRarity.Legendary:
-                        Color = ConsoleColor.DarkYellow;
-                        Name = "LEGENDARY";
-                        break;
-                    case CardRarity.Mythic:
-                        Color = ConsoleColor.Red;
-                        Name = "MYTHIC";
-                        break;
-                }
-            }
-        }
-        public ConsoleColor Color { get; set; }
-        public string Name { get; set; }
-
-        public RarityData(CardRarity Id)
-        {
-            Color = ConsoleColor.White;
-            Name = "NONE";
-            id = CardRarity.None;
-            this.Id = Id;
-        }
-
-        public override string ToString()
-        {
-            return Name;
-        }
-    }
-
-    struct CardStats
-    {
-        public int Attack;
-        public int Health;
-        public int Defense;
-        public int Evasion;
-
-        public CardStats(int Attack, int Health, int Defense, int Evasion)
-        {
-            this.Attack = Attack;
-            this.Health = Health;
-            this.Defense = Defense;
-            this.Evasion = Evasion;
-        }
-        public override string ToString()
-        {
-            return $"HP: {Health}, ATK: {Attack}, DEF:  {Defense}, EVADE: {Evasion}";
-        }
-        public int GetTotalValue()
-        {
-            return Attack + Health + Defense + Evasion;
-        }
-    }
-
     internal class Program
     {
         public static readonly ConsoleColor DefaultColor = ConsoleColor.White;
@@ -146,7 +44,7 @@ namespace CardWar
             DrawMenu(deck);
             Console.Write("Enter > ");
             ConsoleKeyInfo key = Console.ReadKey();
-            while (key.KeyChar != '0') 
+            while (key.KeyChar != '0')
             {
                 if (key.KeyChar == '1')
                 {
@@ -186,7 +84,7 @@ namespace CardWar
                     Console.WriteLine();
                     Console.Write("Enter > ");
                     string fileName = Console.ReadLine() + ".json";
-                    while (!File.Exists(filePath+fileName))
+                    while (!File.Exists(filePath + fileName))
                     {
                         WriteLineColor("File does not exist!", ConsoleColor.DarkRed);
                         Console.WriteLine();
@@ -194,12 +92,12 @@ namespace CardWar
                         fileName = Console.ReadLine() + ".json";
                     }
 
-                    string deckJson = File.ReadAllText(filePath+fileName);
+                    string deckJson = File.ReadAllText(filePath + fileName);
                     deck = JsonConvert.DeserializeObject<Deck>(deckJson);
                     WriteLineColor("Loaded deck successfully...", ConsoleColor.Green);
                 }
                 DrawMenu(deck);
-                
+
                 key = Console.ReadKey();
             }
             Environment.Exit(0);
@@ -207,7 +105,7 @@ namespace CardWar
 
         static bool AddNewCardToDeck(Deck deck)
         {
-            if (!deck.RoomInDeck()) 
+            if (!deck.RoomInDeck())
             {
                 WriteLineColor("\nCreate Card failed: No room in deck...", ConsoleColor.DarkRed);
                 return false;
@@ -226,10 +124,10 @@ namespace CardWar
             ConsoleKeyInfo key = Console.ReadKey();
             string chr = "" + key.KeyChar;
 
-            if (chr.ToUpper().Equals("B")) 
+            if (chr.ToUpper().Equals("B"))
             {
                 Console.Clear();
-                return false; 
+                return false;
             }
             // Extract input character as a number, and perform the necesarry operations
             if (!int.TryParse(chr, out int chrNum) || chrNum < 1 || chrNum > 6)
@@ -276,7 +174,7 @@ namespace CardWar
         SettingStats:
             Console.WriteLine("[STAT ALLOCATION]\n");
             Console.WriteLine($"Points used: {newStats.GetTotalValue()}, " +
-                $"Points left: {maxPoints-newStats.GetTotalValue()}\n");
+                $"Points left: {maxPoints - newStats.GetTotalValue()}\n");
             Console.WriteLine("Current Stats:");
             WriteLineColor(newStats.ToString(), newCard.GetRarityColor());
             Console.WriteLine("\nSelect a stat to modify:\n1) Health (HP)\n2) Attack (ATK)" +
@@ -285,14 +183,14 @@ namespace CardWar
 
             key = Console.ReadKey();
 
-            while (!char.IsDigit(key.KeyChar)) 
+            while (!char.IsDigit(key.KeyChar))
             {
                 Console.Clear();
                 WriteLineColor("Invalid input. Type a number from 1-5\n", ConsoleColor.DarkRed);
                 goto SettingStats;
             }
 
-            switch(key.KeyChar)
+            switch (key.KeyChar)
             {
                 default:
                     Console.Clear();
@@ -383,7 +281,7 @@ namespace CardWar
                     {
                         Console.Clear();
                         WriteLineColor($"You still have {maxPoints - newStats.GetTotalValue()} " +
-                            $"unallocated points. Use all of them.\n",  ConsoleColor.DarkRed);
+                            $"unallocated points. Use all of them.\n", ConsoleColor.DarkRed);
                         goto SettingStats;
                     }
                     if (newStats.Health <= 0)
@@ -401,126 +299,6 @@ namespace CardWar
             deck.Money -= maxPoints;
             WriteLineColor("Card added to deck...", newCard.GetRarityColor());
             return true;
-        }
-    }
-
-    class Deck
-    {
-        [JsonRequired]
-        private List<Card> cards { get; set; }
-        [JsonRequired]
-        private readonly int maxSize;
-        public int Money = 2000;
-
-        public Deck(int maxSize)
-        {
-            this.maxSize = maxSize;
-            cards = new List<Card>();
-        }
-
-        public void ListCards()
-        {
-            Console.Write("\nList of cards in deck:");
-            Console.WriteLine($" (Available slots: {maxSize - GetCardCount()}/{maxSize})\n");
-            if (cards == null || cards.Count == 0)
-            {
-                Console.WriteLine("\tThis deck is empty...");
-                return;
-            }
-            SortDeck();
-            foreach (Card card in  cards)
-            {
-                Program.WriteLineColor($"\t{card}", card.GetRarityColor());
-            }
-        }
-        public void SortDeck()
-        {
-            // Sort by Rarity
-            cards = cards.OrderBy(c => c.GetCardRarity()).ToList();
-        }
-        public int GetCardCount()
-        {
-            if (cards == null)
-            {
-                return 0;
-            }
-            return cards.Count;
-        }
-        public bool RoomInDeck()
-        {
-            return (GetCardCount() < maxSize);
-        }
-        public void AddCard(Card newCard)
-        {
-            newCard.SetId(GetCardCount());
-            cards.Add(newCard);
-        }
-    }
-    class foo
-    {
-        public int x { get; set; }
-        public int y { get; set; }
-
-        public foo(int x, int y)
-        {
-            this.x = x;
-            this.y = y;
-        }
-    }
-
-    class Card
-    {
-        [JsonRequired]
-        private int Id { get; set; }
-        [JsonRequired]
-        private string Name { get; set; }
-        [JsonRequired]
-        private string Description { get; set; }
-        [JsonRequired]
-        private RarityData Rarity {  get; set; }
-        [JsonRequired]
-        private CardStats Stats { get; set; }
-
-        public Card(string name, string desc, RarityData rarity, CardStats stats)
-        {
-            Name = name;
-            Description = desc;
-            Rarity = rarity;
-            Stats = stats;
-        }
-        public Card ()
-        {
-        }
-
-        public override string ToString()
-        {
-            return (
-                $"[{GetRarityName()}]   [{Name}: {Description}]   [{Stats}]"
-            );
-        }
-        public int GetId() { return Id; }
-        public void SetId(int Id) { this.Id = Id; }
-        public string GetName() { return Name; }
-        public void SetName(string Name) { this.Name = Name.Substring(0, Math.Min(20, Name.Length)); }
-        public string GetDescription() { return Description; }
-        public void SetDescription(string Description) { this.Description = Description; }
-        public CardRarity GetCardRarity() { return Rarity.Id; }
-        public void SetCardRarity(CardRarity rarity) { Rarity = new RarityData(rarity); }
-        public ConsoleColor GetRarityColor()
-        {
-            return Rarity.Color;
-        }
-        public string GetRarityName()
-        {
-            return Rarity.Name;
-        }
-        public void SetStats(CardStats stats)
-        {
-            Stats = stats;
-        }
-        public CardStats GetStats()
-        {
-            return Stats;
         }
     }
 }
