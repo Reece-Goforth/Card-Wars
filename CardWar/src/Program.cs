@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using Newtonsoft.Json;
 
 namespace CardWar
@@ -19,13 +20,34 @@ namespace CardWar
         static void DrawMoneyCount(Deck currentDeck)
         {
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"\nMONEY: {currentDeck.Money}\n");
+            Console.WriteLine($"\nCREDITS: {currentDeck.Money}\n");
+            Console.ForegroundColor = DefaultColor;
+        }
+        public static void WriteLineColor(string str, ConsoleColor col, int timeInBetweenChars)
+        {
+            Console.ForegroundColor = col;
+            foreach (char chr in str)
+            {
+                Console.Write(chr);
+                Thread.Sleep(timeInBetweenChars);
+            }
+            Console.Write("\n");
             Console.ForegroundColor = DefaultColor;
         }
         public static void WriteLineColor(string str, ConsoleColor col)
         {
             Console.ForegroundColor = col;
             Console.WriteLine(str);
+            Console.ForegroundColor = DefaultColor;
+        }
+        public static void WriteColor(string str, ConsoleColor col, int timeInBetweenChars)
+        {
+            Console.ForegroundColor = col;
+            foreach (char chr in str)
+            {
+                Console.Write(chr);
+                Thread.Sleep(timeInBetweenChars);
+            }
             Console.ForegroundColor = DefaultColor;
         }
         public static void WriteColor(string str, ConsoleColor col)
@@ -62,39 +84,79 @@ namespace CardWar
                 {
                     Console.Clear();
 
-                    Console.WriteLine("What to name this deck?\n");
-                    Console.Write("Enter > ");
-                    string fileName = Console.ReadLine() + ".json";
-
-                    var deckJson = JsonConvert.SerializeObject(deck, Formatting.Indented);
-                    File.WriteAllText(filePath + fileName, deckJson);
-                    WriteLineColor($"Successfully saved deck to: {filePath}", ConsoleColor.Green);
-                }
-                if (key.KeyChar == '4')
-                {
-                    Console.Clear();
-                    Console.WriteLine("Choose a deck from the list:");
+                    Console.WriteLine("What to name this new deck?\n");
+                    Console.WriteLine("List of currently saved decks:");
                     string[] files = Directory.GetFiles(filePath);
 
                     foreach (string file in files)
                     {
                         var str = file.Replace(filePath, "").Replace(".json", "");
-                        WriteLineColor($"\t[{str}]", ConsoleColor.DarkGray);
+                        if (files.Length < 10)
+                        {
+                            WriteLineColor($"\t[{str}]", ConsoleColor.DarkGray, 1);
+                        }
+                        else
+                        {
+                            WriteLineColor($"\t[{str}]", ConsoleColor.DarkGray);
+                        }
+                    }
+                    if (files.Length == 0)
+                    {
+                        WriteLineColor("\tDirectory is empty...", ConsoleColor.DarkGray, 1);
+                    }
+                    Console.Write("\nEnter > ");
+
+                    string fileName = Console.ReadLine() + ".json";
+
+                    var deckJson = JsonConvert.SerializeObject(deck, Formatting.Indented);
+                    File.WriteAllText(filePath + fileName, deckJson);
+                    WriteLineColor($"Successfully saved deck to: {filePath}{fileName}", ConsoleColor.Green);
+                }
+                if (key.KeyChar == '4')
+                {
+                    Console.Clear();
+                    Console.WriteLine("Choose a deck to LOAD from the list:");
+                    string[] files = Directory.GetFiles(filePath);
+
+                    foreach (string file in files)
+                    {
+                        var str = file.Replace(filePath, "").Replace(".json", "");
+                        if (files.Length < 10)
+                        {
+                            WriteLineColor($"\t[{str}]", ConsoleColor.DarkGray, 1);
+                        }
+                        else
+                        {
+                            WriteLineColor($"\t[{str}]", ConsoleColor.DarkGray);
+                        }
+                    }
+                    if (files.Length == 0)
+                    {
+                        WriteLineColor("\tDirectory is empty...", ConsoleColor.DarkGray, 1);
                     }
                     Console.WriteLine();
                     Console.Write("Enter > ");
+
                     string fileName = Console.ReadLine() + ".json";
                     while (!File.Exists(filePath + fileName))
                     {
                         WriteLineColor("File does not exist!", ConsoleColor.DarkRed);
                         Console.WriteLine();
                         Console.Write("Enter > ");
+
                         fileName = Console.ReadLine() + ".json";
                     }
 
                     string deckJson = File.ReadAllText(filePath + fileName);
-                    deck = JsonConvert.DeserializeObject<Deck>(deckJson);
-                    WriteLineColor("Loaded deck successfully...", ConsoleColor.Green);
+                    try
+                    {
+                        deck = JsonConvert.DeserializeObject<Deck>(deckJson);
+                        WriteLineColor("Loaded deck successfully...", ConsoleColor.Green);
+                    }
+                    catch (JsonSerializationException)
+                    {
+                        WriteLineColor("Invalid file format. Was this file saved in an older version?", ConsoleColor.DarkRed);
+                    }
                 }
                 DrawMenu(deck);
 
@@ -119,12 +181,12 @@ namespace CardWar
             DrawMoneyCount(deck);
             Console.WriteLine("Choose Rarity:\n1) Common [$100],\n2) Uncommon [$200]," +
                 "\n3) Rare [$300],\n4) Epic [$400],\n5) Ledgendary [$500]\n6) Mythic [$600]" +
-                "\nB) back to menu\n");
+                "\n\nESC) back to menu\n");
             Console.Write("Enter > ");
             ConsoleKeyInfo key = Console.ReadKey();
             string chr = "" + key.KeyChar;
 
-            if (chr.ToUpper().Equals("B"))
+            if (key.Key.Equals(ConsoleKey.Escape))
             {
                 Console.Clear();
                 return false;
@@ -137,7 +199,7 @@ namespace CardWar
             }
             if ((chrNum * 100) > deck.Money)
             {
-                WriteLineColor("\nNot enough funds! Pick something else or return to menu (B)...", ConsoleColor.DarkRed);
+                WriteLineColor("\nNot enough funds! Pick something else or return to menu (ESC)...", ConsoleColor.DarkRed);
                 goto SettingRarity;
             }
             newCard.SetCardRarity((CardRarity)chrNum);

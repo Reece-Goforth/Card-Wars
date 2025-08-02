@@ -1,4 +1,5 @@
 ﻿using System;
+using Newtonsoft.Json.Linq;
 
 namespace CardWar
 {
@@ -14,53 +15,43 @@ namespace CardWar
     }
     struct RarityData
     {
-        private CardRarity id { get; set; }
-        public CardRarity Id
-        {
-            get { return id; }
-            set
-            {
-                id = value;
-                switch (value)
-                {
-                    default:
-                    case CardRarity.None:
-                        break;
-                    case CardRarity.Common:
-                        Color = ConsoleColor.DarkGray;
-                        Name = "COMMON";
-                        break;
-                    case CardRarity.Uncommon:
-                        Color = ConsoleColor.DarkGreen;
-                        Name = "UNCOMMON";
-                        break;
-                    case CardRarity.Rare:
-                        Color = ConsoleColor.Blue;
-                        Name = "RARE";
-                        break;
-                    case CardRarity.Epic:
-                        Color = ConsoleColor.DarkMagenta;
-                        Name = "EPIC";
-                        break;
-                    case CardRarity.Legendary:
-                        Color = ConsoleColor.DarkYellow;
-                        Name = "LEGENDARY";
-                        break;
-                    case CardRarity.Mythic:
-                        Color = ConsoleColor.Red;
-                        Name = "MYTHIC";
-                        break;
-                }
-            }
-        }
+        public CardRarity Id { get; set; }
         public ConsoleColor Color { get; set; }
         public string Name { get; set; }
 
         public RarityData(CardRarity Id)
         {
+            // Default case
             Color = ConsoleColor.White;
             Name = "NONE";
-            id = CardRarity.None;
+            
+            switch (Id)
+            {
+                case CardRarity.Common:
+                    Color = ConsoleColor.DarkGray;
+                    Name = "COMMON";
+                    break;
+                case CardRarity.Uncommon:
+                    Color = ConsoleColor.DarkGreen;
+                    Name = "UNCOMMON";
+                    break;
+                case CardRarity.Rare:
+                    Color = ConsoleColor.Blue;
+                    Name = "RARE";
+                    break;
+                case CardRarity.Epic:
+                    Color = ConsoleColor.DarkMagenta;
+                    Name = "EPIC";
+                    break;
+                case CardRarity.Legendary:
+                    Color = ConsoleColor.DarkYellow;
+                    Name = "LEGENDARY";
+                    break;
+                case CardRarity.Mythic:
+                    Color = ConsoleColor.Red;
+                    Name = "MYTHIC";
+                    break;
+            }
             this.Id = Id;
         }
 

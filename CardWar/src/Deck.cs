@@ -38,6 +38,7 @@ namespace CardWar
         {
             // Sort by Rarity
             Cards = Cards.OrderBy(c => c.GetCardRarity()).ToList();
+            Cards.Reverse();
         }
         public int GetCardCount()
         {

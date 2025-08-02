@@ -5,29 +5,28 @@ namespace CardWar
 {
     class Card
     {
+        public int Id { get; private set; }
+        public int Level { get; private set; }
         [JsonRequired]
-        private int Id { get; set; }
+        public string Name { get; private set; }
         [JsonRequired]
-        private int Level { get; set; }
-        [JsonRequired]
-        private string Name { get; set; }
-        [JsonRequired]
-        private string Description { get; set; }
+        public string Description { get; private set; }
         [JsonRequired]
         private RarityData Rarity { get; set; }
         [JsonRequired]
-        private CardStats Stats { get; set; }
+        public CardStats Stats { get; private set; }
 
+        public Card()
+        {
+            Level = 1;
+        }
         public Card(string name, string desc, RarityData rarity, CardStats stats)
         {
+            Level = 1;
             Name = name;
             Description = desc;
             Rarity = rarity;
             Stats = stats;
-            Level = 1;
-        }
-        public Card()
-        {
         }
 
         public override string ToString()
@@ -38,21 +37,7 @@ namespace CardWar
         }
         public int GetId() { return Id; }
         public void SetId(int Id) { this.Id = Id; }
-        public int GetLevel() { return Level; }
-        public void LevelUp(int hpIncrease, int atkIncrease, int defIncrease, int evadeIncrease)
-        {
-            Level++;
-            Stats = new CardStats(
-                Stats.Health  + hpIncrease,
-                Stats.Attack + atkIncrease,
-                Stats.Defense  + defIncrease,
-                Stats.Evasion + evadeIncrease
-            );
-
-        }
-        public string GetName() { return Name; }
         public void SetName(string Name) { this.Name = Name.Substring(0, Math.Min(20, Name.Length)); }
-        public string GetDescription() { return Description; }
         public void SetDescription(string Description) { this.Description = Description; }
         public CardRarity GetCardRarity() { return Rarity.Id; }
         public void SetCardRarity(CardRarity rarity) { Rarity = new RarityData(rarity); }
@@ -68,9 +53,16 @@ namespace CardWar
         {
             Stats = stats;
         }
-        public CardStats GetStats()
+        public void LevelUp(int hpIncrease, int atkIncrease, int defIncrease, int evadeIncrease)
         {
-            return Stats;
+            Level++;
+            Stats = new CardStats(
+                Stats.Health + hpIncrease,
+                Stats.Attack + atkIncrease,
+                Stats.Defense + defIncrease,
+                Stats.Evasion + evadeIncrease
+            );
+
         }
     }
 }
